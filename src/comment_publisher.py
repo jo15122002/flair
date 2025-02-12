@@ -1,6 +1,6 @@
 import logging
-from src.config import load_config
-from src.comment_publisher_github import publish_comment as publish_github
+from config import load_config
+from comment_publisher_github import publish_comment as publish_github
 
 def post_comments(comments):
     """

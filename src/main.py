@@ -1,8 +1,8 @@
 import logging
-from src.config import load_config
-from src.diff_extractor import get_diff, split_diff
-from src.llm_client import query_llm
-from src.comment_publisher import post_comments
+from config import load_config
+from diff_extractor import get_diff, split_diff
+from llm_client import query_llm
+from comment_publisher import post_comments
 
 def main():
     # Configuration et logging
