@@ -21,3 +21,14 @@ class Config:
 
 def load_config():
     return Config
+
+# main
+if __name__ == "__main__":
+    config = load_config()
+    print(config.LLM_ENDPOINT)
+    print(config.DIFF_CHUNK_SIZE)
+    print(config.CI_PLATFORM)
+    print(config.GITHUB_TOKEN)
+    print(config.GITHUB_API_URL)
+    print(config.GITLAB_API_URL)
+    print(config.GITLAB_PRIVATE_TOKEN)
