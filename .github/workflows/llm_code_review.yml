@@ -30,6 +30,10 @@ jobs:
         run: |
           pytest
 
+      # Debug step to print environment variables
+      - name: Print environment variables
+        run: printenv
+
       # Étape 5 : Exécuter le script principal pour la revue de code
       - name: Run LLM code review
         env:
