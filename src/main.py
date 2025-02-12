@@ -8,7 +8,6 @@ from comment_publisher import post_comments
 def main():
     # Chargement de la configuration et initialisation du logging
     config = load_config()
-    logging.info(config)
     if not config:
         logging.error("Erreur lors du chargement de la configuration.")
         return
