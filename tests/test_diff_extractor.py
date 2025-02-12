@@ -1,9 +1,10 @@
 import os
 import subprocess
 import unittest
+import requests
 from unittest.mock import patch, MagicMock
 
-from src.diff_extractor import get_diff, split_diff
+from src.diff_extractor import get_diff, split_diff, get_diff_from_pr
 
 class TestDiffExtractor(unittest.TestCase):
 
@@ -64,6 +65,43 @@ class TestDiffExtractor(unittest.TestCase):
         self.assertEqual(chunks[0], "a" * 100)
         self.assertEqual(chunks[1], "a" * 100)
         self.assertEqual(chunks[2], "a" * 50)
+
+    @patch("src.diff_extractor.requests.get")
+    def test_get_diff_from_pr_success(self, mock_get):
+        # Configurer les variables d'environnement simulées
+        os.environ["REPOSITORY_GITHUB"] = "owner/repo"
+        os.environ["PR_NUMBER_GITHUB"] = "1"
+        os.environ["TOKEN_GITHUB"] = "dummy_token"
+        
+        fake_diff = "diff --git a/file.py b/file.py\n..."
+        fake_response = MagicMock(status_code=200)
+        fake_response.text = fake_diff
+        fake_response.raise_for_status.return_value = None
+        mock_get.return_value = fake_response
+        
+        diff = get_diff_from_pr()
+        self.assertEqual(diff, fake_diff)
+    
+    @patch("src.diff_extractor.requests.get")
+    def test_get_diff_from_pr_failure(self, mock_get):
+        # Configurer les variables d'environnement simulées
+        os.environ["REPOSITORY_GITHUB"] = "owner/repo"
+        os.environ["PR_NUMBER_GITHUB"] = "1"
+        os.environ["TOKEN_GITHUB"] = "dummy_token"
+        
+        # Simuler une exception lors de l'appel HTTP
+        mock_get.side_effect = requests.exceptions.RequestException("Erreur")
+        diff = get_diff_from_pr()
+        self.assertIsNone(diff)
+    
+    def test_get_diff_from_pr_missing_env(self):
+        # S'assurer que l'absence de variables d'environnement retourne None
+        os.environ.pop("REPOSITORY_GITHUB", None)
+        os.environ.pop("PR_NUMBER_GITHUB", None)
+        os.environ.pop("TOKEN_GITHUB", None)
+        
+        diff = get_diff_from_pr()
+        self.assertIsNone(diff)
 
 if __name__ == '__main__':
     unittest.main()

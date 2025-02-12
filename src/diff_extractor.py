@@ -1,6 +1,7 @@
 import os
 import subprocess
 import logging
+import requests
 
 def get_diff(config):
     """
@@ -31,6 +32,33 @@ def get_diff(config):
         return diff
     except subprocess.CalledProcessError as e:
         logging.error("Erreur lors de l'extraction du diff: %s", e)
+        return None
+    
+def get_diff_from_pr():
+    """
+    Récupère le diff directement via l'API GitHub en utilisant l'URL de diff de la pull request.
+    """
+    repo = os.getenv("REPOSITORY_GITHUB")
+    pr_number = os.getenv("PR_NUMBER_GITHUB")
+    token = os.getenv("TOKEN_GITHUB")
+    
+    if not repo or not pr_number or not token:
+        logging.error("Les variables REPOSITORY_GITHUB, PR_NUMBER_GITHUB et TOKEN_GITHUB doivent être définies.")
+        return None
+
+    # Construire l'URL pour récupérer le diff
+    diff_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3.diff"  # Spécifie le format diff
+    }
+    
+    try:
+        response = requests.get(diff_url, headers=headers)
+        response.raise_for_status()
+        return response.text
+    except requests.exceptions.RequestException as e:
+        logging.error("Erreur lors de la récupération du diff via l'API GitHub : %s", e)
         return None
 
 def split_diff(diff, chunk_size):
