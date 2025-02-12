@@ -7,7 +7,7 @@ def query_llm(diff_chunk, config, params=None):
     """
     if params is None:
         params = {
-            "max_tokens": 150,
+            "max_tokens": 900,
             "temperature": 0.7
         }
     

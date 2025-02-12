@@ -2,47 +2,45 @@ import os
 import requests
 import logging
 
-def publish_comment(comment, config):
+def publish_comment(comment_obj, config):
     """
-    Publie un commentaire sur une pull request GitHub.
+    Publishes a comment on a GitHub pull request using the LLM feedback object.
     
-    :param comment: Texte du commentaire à publier.
-    :param config: Configuration chargée depuis config.py.
-    :return: True si le commentaire est publié avec succès, sinon False.
+    Expects comment_obj to be a dictionary with the following keys:
+      - "file": the filename (e.g. "src/main.py")
+      - "line": the line number or range (e.g. 42 or "40-45")
+      - "comment": the feedback text for that section
+      
+    The function constructs a message that includes this information and
+    posts it as a comment on the pull request.
     """
-    # Récupération des informations nécessaires
-    repo = os.getenv("GITHUB_REPOSITORY")  # Format attendu : "owner/repo"
-    pr_number = os.getenv("GITHUB_PR_NUMBER")  # Doit être défini dans l'environnement CI
+    repo = os.getenv("GITHUB_REPOSITORY")  # Format: "owner/repo"
+    pr_number = os.getenv("GITHUB_PR_NUMBER")  # The pull request number as a string
     if not repo or not pr_number:
-        logging.error("Les variables GITHUB_REPOSITORY et GITHUB_PR_NUMBER doivent être définies.")
+        logging.error("Environment variables GITHUB_REPOSITORY and GITHUB_PR_NUMBER must be set.")
         return False
 
-    # Construire l'URL de l'API pour poster le commentaire sur la PR
+    # Construire le corps du message en intégrant les informations du feedback
+    file_info = comment_obj.get("file", "unknown file")
+    line_info = comment_obj.get("line", "unknown line")
+    feedback_text = comment_obj.get("comment", "")
+    
+    # On peut formater le message de façon claire pour le lecteur
+    body = f"**File:** `{file_info}`\n**Line:** {line_info}\n\n{feedback_text}"
+
+    # URL de l'API pour poster un commentaire sur la PR (endpoint issues)
     url = f"{config.GITHUB_API_URL}/repos/{repo}/issues/{pr_number}/comments"
     headers = {
         "Authorization": f"Bearer {config.GITHUB_TOKEN}",
         "Accept": "application/vnd.github.v3+json"
     }
-    payload = {"body": comment}
-    
+    payload = {"body": body}
+
     try:
         response = requests.post(url, json=payload, headers=headers)
         response.raise_for_status()
-        logging.info("Commentaire publié avec succès sur la PR #%s.", pr_number)
+        logging.info("Comment published successfully on PR #%s.", pr_number)
         return True
     except requests.exceptions.RequestException as e:
-        logging.error("Erreur lors de la publication du commentaire : %s", e)
+        logging.error("Error publishing comment: %s", e)
         return False
-    
-# main
-if __name__ == "__main__":
-    import config as cfg
-
-    # Exemple de commentaire à publier
-    comment = "Hello world!"
-    
-    # Publication du commentaire
-    if publish_comment(comment, cfg.load_config()):
-        print("Commentaire publié avec succès.")
-    else:
-        print("Erreur lors de la publication du commentaire.")
