@@ -32,7 +32,15 @@ jobs:
 
       # Debug step to print environment variables
       - name: Print environment variables
-        run: printenv
+        env:
+            REPOSITORY_GITHUB: ${{ github.repository }}
+            PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
+            TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
+            LLM_ENDPOINT: ${{ secrets.LLM_ENDPOINT }}
+            DIFF_CHUNK_SIZE: 10000
+            CI_PLATFORM: github
+        run: |
+          printenv
 
       # Étape 5 : Exécuter le script principal pour la revue de code
       - name: Run LLM code review
