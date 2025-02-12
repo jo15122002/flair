@@ -1,5 +1,7 @@
 import requests
 import logging
+import json
+import re
 
 def query_llm(diff_chunk, config, params=None):
     """
@@ -53,6 +55,38 @@ def build_llm_prompt(diff):
     {diff}
     """
     return prompt.strip()
+
+import json
+import re
+
+def extract_json_from_text(text):
+    """
+    Extrait la sous-chaîne JSON contenue dans le texte.
+    Cette fonction recherche la première occurrence de '{' et la dernière de '}'.
+    Si cela échoue, elle utilise une regex pour essayer de trouver un objet JSON.
+    Retourne le dictionnaire JSON si trouvé, sinon None.
+    """
+    # Option 1 : Extraire la portion entre la première '{' et la dernière '}'
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1 and end > start:
+        json_str = text[start:end+1]
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            # En cas d'erreur, on passe à l'approche regex
+            pass
+
+    # Option 2 : Utiliser une regex pour repérer un bloc JSON
+    matches = re.findall(r'{.*}', text, re.DOTALL)
+    if matches:
+        # Par exemple, prendre le dernier match (celui qui semble le plus complet)
+        try:
+            return json.loads(matches[-1])
+        except json.JSONDecodeError:
+            return None
+    return None
+
 
 # main
 if __name__ == "__main__":

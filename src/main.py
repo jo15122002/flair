@@ -2,7 +2,7 @@ import logging
 import json
 from config import load_config
 from diff_extractor import get_diff_from_pr, split_diff
-from llm_client import query_llm
+from llm_client import query_llm, extract_json_from_text
 from comment_publisher import post_comments
 
 def main():
@@ -38,13 +38,14 @@ def main():
             logging.error("Réponse du LLM pour le chunk %d vide ou malformée.", i+1)
             continue
         
-        try:
-            parsed_response = json.loads(response_content)
-            comments = parsed_response.get("comments", [])
-        except json.JSONDecodeError as e:
-            # Gérer le cas où la chaîne n'est pas un JSON valide
-            print("Erreur de décodage JSON:", e)
+        # Utiliser la fonction extract_json_from_text pour extraire le JSON
+        parsed_response = extract_json_from_text(response_content)
+        if parsed_response is None:
+            logging.error("Impossible d'extraire le JSON du chunk %d.", i+1)
             comments = []
+        else:
+            comments = parsed_response.get("comments", [])
+        
         if comments:
             logging.info("Chunk %d traité : %d commentaire(s) généré(s).", i+1, len(comments))
             all_comments.extend(comments)
