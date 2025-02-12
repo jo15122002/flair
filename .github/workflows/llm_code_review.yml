@@ -35,7 +35,7 @@ jobs:
         env:
           # Ces variables sont définies par GitHub Actions et/ou vos secrets
           GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           TOKEN_GITHUB: ${{ secrets.TOKEN_GITHUB }}
           # Vous pouvez également définir ici d'autres variables nécessaires (par exemple, LLM_ENDPOINT, DIFF_CHUNK_SIZE, etc.)
           LLM_ENDPOINT: ${{ secrets.LLM_ENDPOINT }}

@@ -70,7 +70,7 @@ class TestDiffExtractor(unittest.TestCase):
     def test_get_diff_from_pr_success(self, mock_get):
         # Configurer les variables d'environnement simulées
         os.environ["GITHUB_REPOSITORY"] = "owner/repo"
-        os.environ["GITHUB_PR_NUMBER"] = "1"
+        os.environ["PR_NUMBER"] = "1"
         os.environ["TOKEN_GITHUB"] = "dummy_token"
         
         fake_diff = "diff --git a/file.py b/file.py\n..."
@@ -86,7 +86,7 @@ class TestDiffExtractor(unittest.TestCase):
     def test_get_diff_from_pr_failure(self, mock_get):
         # Configurer les variables d'environnement simulées
         os.environ["GITHUB_REPOSITORY"] = "owner/repo"
-        os.environ["GITHUB_PR_NUMBER"] = "1"
+        os.environ["PR_NUMBER"] = "1"
         os.environ["TOKEN_GITHUB"] = "dummy_token"
         
         # Simuler une exception lors de l'appel HTTP
@@ -97,7 +97,7 @@ class TestDiffExtractor(unittest.TestCase):
     def test_get_diff_from_pr_missing_env(self):
         # S'assurer que l'absence de variables d'environnement retourne None
         os.environ.pop("GITHUB_REPOSITORY", None)
-        os.environ.pop("GITHUB_PR_NUMBER", None)
+        os.environ.pop("PR_NUMBER", None)
         os.environ.pop("TOKEN_GITHUB", None)
         
         diff = get_diff_from_pr()

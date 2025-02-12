@@ -15,7 +15,7 @@ class TestCommentPublisherGitHub(unittest.TestCase):
     def test_publish_comment_success(self, mock_post):
         # Configuration des variables d'environnement pour simuler l'environnement GitHub
         os.environ["GITHUB_REPOSITORY"] = "owner/repo"
-        os.environ["GITHUB_PR_NUMBER"] = "42"
+        os.environ["PR_NUMBER"] = "42"
 
         # Simuler une réponse réussie de l'API GitHub
         fake_response = MagicMock(status_code=201)
@@ -35,7 +35,7 @@ class TestCommentPublisherGitHub(unittest.TestCase):
     def test_publish_comment_failure(self, mock_post):
         # Configuration des variables d'environnement simulées
         os.environ["GITHUB_REPOSITORY"] = "owner/repo"
-        os.environ["GITHUB_PR_NUMBER"] = "42"
+        os.environ["PR_NUMBER"] = "42"
 
         # Simuler une exception lors de l'appel HTTP
         mock_post.side_effect = requests.exceptions.RequestException("Error")
@@ -50,7 +50,7 @@ class TestCommentPublisherGitHub(unittest.TestCase):
     def test_publish_comment_missing_env_vars(self):
         # Supprimer les variables d'environnement pour simuler leur absence
         os.environ.pop("GITHUB_REPOSITORY", None)
-        os.environ.pop("GITHUB_PR_NUMBER", None)
+        os.environ.pop("PR_NUMBER", None)
 
         comment = {
             "file": "src/main.py",
