@@ -2,6 +2,7 @@ import os
 import subprocess
 import logging
 import requests
+import re
 
 def get_diff(config):
     """
@@ -69,3 +70,55 @@ def split_diff(diff, chunk_size):
     if not diff:
         return []
     return [diff[i:i+chunk_size] for i in range(0, len(diff), chunk_size)]
+
+def filter_diff(diff, exclude_patterns=None):
+    """
+    Filtre le diff pour exclure les fichiers dont le chemin contient un motif
+    indésirable (par défaut : "test", "tests", "spec").
+    """
+    if exclude_patterns is None:
+        exclude_patterns = ['test', 'tests', 'spec']
+    
+    filtered_lines = []
+    skip_file = False
+    for line in diff.splitlines():
+        # Détection du début d'un bloc de fichier
+        if line.startswith("diff --git"):
+            # Exemple de ligne : "diff --git a/src/main.py b/src/main.py"
+            # On extrait le nom du fichier (partie après "a/")
+            parts = line.split()
+            if len(parts) >= 3:
+                file_a = parts[2]  # attend "a/chemin/du/fichier"
+                filename = file_a[2:] if file_a.startswith("a/") else file_a
+                # Si le nom du fichier contient un des motifs d'exclusion, on active le flag
+                skip_file = any(pat.lower() in filename.lower() for pat in exclude_patterns)
+            filtered_lines.append(line)
+        else:
+            # On n'ajoute la ligne que si le fichier n'est pas à exclure
+            if not skip_file:
+                filtered_lines.append(line)
+    return "\n".join(filtered_lines)
+
+def split_diff_intelligent(diff, max_lines=1000):
+    """
+    Découpe le diff en blocs par fichier, puis subdivise chaque bloc s'il est trop volumineux
+    (en se basant sur le nombre de lignes).
+    
+    On suppose que chaque bloc de fichier commence par "diff --git".
+    """
+    # Séparer le diff en blocs en se basant sur "diff --git"
+    blocks = re.split(r'(?=^diff --git)', diff, flags=re.MULTILINE)
+    chunks = []
+    for block in blocks:
+        if not block.strip():
+            continue
+        # Si le bloc est court, on le garde tel quel
+        lines = block.splitlines()
+        if len(lines) <= max_lines:
+            chunks.append(block)
+        else:
+            # Si le bloc est trop grand, on le subdivise par tranche de max_lines
+            for i in range(0, len(lines), max_lines):
+                sub_block = "\n".join(lines[i:i+max_lines])
+                chunks.append(sub_block)
+    return chunks
