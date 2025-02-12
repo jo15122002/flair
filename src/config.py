@@ -12,7 +12,7 @@ class Config:
     DIFF_CHUNK_SIZE = int(os.getenv("DIFF_CHUNK_SIZE", "10000"))
     
     # Configuration spécifique à GitHub Actions
-    GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+    TOKEN_GITHUB = os.getenv("TOKEN_GITHUB")
     GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")
     
     # Configuration spécifique à GitLab (pour une future extension)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     print(config.LLM_ENDPOINT)
     print(config.DIFF_CHUNK_SIZE)
     print(config.CI_PLATFORM)
-    print(config.GITHUB_TOKEN)
+    print(config.TOKEN_GITHUB)
     print(config.GITHUB_API_URL)
     print(config.GITLAB_API_URL)
     print(config.GITLAB_PRIVATE_TOKEN)

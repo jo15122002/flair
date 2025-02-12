@@ -31,7 +31,7 @@ def publish_comment(comment_obj, config):
     # URL de l'API pour poster un commentaire sur la PR (endpoint issues)
     url = f"{config.GITHUB_API_URL}/repos/{repo}/issues/{pr_number}/comments"
     headers = {
-        "Authorization": f"Bearer {config.GITHUB_TOKEN}",
+        "Authorization": f"Bearer {config.TOKEN_GITHUB}",
         "Accept": "application/vnd.github.v3+json"
     }
     payload = {"body": body}
