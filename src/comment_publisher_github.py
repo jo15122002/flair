@@ -14,10 +14,10 @@ def publish_comment(comment_obj, config):
     The function constructs a message that includes this information and
     posts it as a comment on the pull request.
     """
-    repo = os.getenv("GITHUB_REPOSITORY")  # Format: "owner/repo"
+    repo = os.getenv("REPOSITORY_GITHUB")  # Format: "owner/repo"
     pr_number = os.getenv("PR_NUMBER_GITHUB")  # The pull request number as a string
     if not repo or not pr_number:
-        logging.error("Environment variables GITHUB_REPOSITORY and PR_NUMBER_GITHUB must be set.")
+        logging.error("Environment variables REPOSITORY_GITHUB and PR_NUMBER_GITHUB must be set.")
         return False
 
     # Construire le corps du message en intégrant les informations du feedback

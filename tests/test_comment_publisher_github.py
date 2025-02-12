@@ -14,7 +14,7 @@ class TestCommentPublisherGitHub(unittest.TestCase):
     @patch("src.comment_publisher_github.requests.post")
     def test_publish_comment_success(self, mock_post):
         # Configuration des variables d'environnement pour simuler l'environnement GitHub
-        os.environ["GITHUB_REPOSITORY"] = "owner/repo"
+        os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "42"
 
         # Simuler une réponse réussie de l'API GitHub
@@ -34,7 +34,7 @@ class TestCommentPublisherGitHub(unittest.TestCase):
     @patch("src.comment_publisher_github.requests.post")
     def test_publish_comment_failure(self, mock_post):
         # Configuration des variables d'environnement simulées
-        os.environ["GITHUB_REPOSITORY"] = "owner/repo"
+        os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "42"
 
         # Simuler une exception lors de l'appel HTTP
@@ -49,7 +49,7 @@ class TestCommentPublisherGitHub(unittest.TestCase):
 
     def test_publish_comment_missing_env_vars(self):
         # Supprimer les variables d'environnement pour simuler leur absence
-        os.environ.pop("GITHUB_REPOSITORY", None)
+        os.environ.pop("REPOSITORY_GITHUB", None)
         os.environ.pop("PR_NUMBER_GITHUB", None)
 
         comment = {

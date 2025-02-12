@@ -69,7 +69,7 @@ class TestDiffExtractor(unittest.TestCase):
     @patch("src.diff_extractor.requests.get")
     def test_get_diff_from_pr_success(self, mock_get):
         # Configurer les variables d'environnement simulées
-        os.environ["GITHUB_REPOSITORY"] = "owner/repo"
+        os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "1"
         os.environ["TOKEN_GITHUB"] = "dummy_token"
         
@@ -85,7 +85,7 @@ class TestDiffExtractor(unittest.TestCase):
     @patch("src.diff_extractor.requests.get")
     def test_get_diff_from_pr_failure(self, mock_get):
         # Configurer les variables d'environnement simulées
-        os.environ["GITHUB_REPOSITORY"] = "owner/repo"
+        os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "1"
         os.environ["TOKEN_GITHUB"] = "dummy_token"
         
@@ -96,7 +96,7 @@ class TestDiffExtractor(unittest.TestCase):
     
     def test_get_diff_from_pr_missing_env(self):
         # S'assurer que l'absence de variables d'environnement retourne None
-        os.environ.pop("GITHUB_REPOSITORY", None)
+        os.environ.pop("REPOSITORY_GITHUB", None)
         os.environ.pop("PR_NUMBER_GITHUB", None)
         os.environ.pop("TOKEN_GITHUB", None)
         

@@ -38,12 +38,12 @@ def get_diff_from_pr():
     """
     Récupère le diff directement via l'API GitHub en utilisant l'URL de diff de la pull request.
     """
-    repo = os.getenv("GITHUB_REPOSITORY")  # Format "owner/repo"
+    repo = os.getenv("REPOSITORY_GITHUB")  # Format "owner/repo"
     pr_number = os.getenv("PR_NUMBER_GITHUB")
     token = os.getenv("TOKEN_GITHUB")
     
     if not repo or not pr_number or not token:
-        logging.error("Les variables GITHUB_REPOSITORY, PR_NUMBER_GITHUB et TOKEN_GITHUB doivent être définies.")
+        logging.error("Les variables REPOSITORY_GITHUB, PR_NUMBER_GITHUB et TOKEN_GITHUB doivent être définies.")
         return None
 
     # Construire l'URL pour récupérer le diff
