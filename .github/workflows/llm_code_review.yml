@@ -30,11 +30,17 @@ jobs:
         run: |
           pytest
 
-      - name: Check environment variables
+      # Debug step to print environment variables
+      - name: Print environment variables
+        env:
+            REPOSITORY_GITHUB: ${{ github.repository }}
+            PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
+            TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
+            LLM_ENDPOINT: ${{ secrets.LLM_ENDPOINT }}
+            DIFF_CHUNK_SIZE: 10000
+            CI_PLATFORM: github
         run: |
-            echo "GITHUB_TOKEN is set: $([ -z "${GITHUB_TOKEN}" ] && echo 'false' || echo 'true')"
-            echo "LLM_ENDPOINT is set: $([ -z "${LLM_ENDPOINT}" ] && echo 'false' || echo 'true')"
-        
+          printenv | grep LLM_ENDPOINT
 
       # Étape 5 : Exécuter le script principal pour la revue de code
       - name: Run LLM code review
