@@ -40,10 +40,10 @@ def get_diff_from_pr():
     """
     repo = os.getenv("GITHUB_REPOSITORY")  # Format "owner/repo"
     pr_number = os.getenv("GITHUB_PR_NUMBER")
-    token = os.getenv("GITHUB_TOKEN")
+    token = os.getenv("TOKEN_GITHUB")
     
     if not repo or not pr_number or not token:
-        logging.error("Les variables GITHUB_REPOSITORY, GITHUB_PR_NUMBER et GITHUB_TOKEN doivent être définies.")
+        logging.error("Les variables GITHUB_REPOSITORY, GITHUB_PR_NUMBER et TOKEN_GITHUB doivent être définies.")
         return None
 
     # Construire l'URL pour récupérer le diff
