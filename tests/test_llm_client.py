@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import requests
 
 from src.llm_client import query_llm
+from src.llm_client import build_llm_prompt
 
 class DummyConfig:
     LLM_ENDPOINT = "http://localhost:8080/predict"
@@ -24,6 +25,14 @@ class TestLLMClient(unittest.TestCase):
         mock_post.side_effect = requests.exceptions.RequestException("Erreur")
         result = query_llm("diff chunk", DummyConfig())
         self.assertIsNone(result)
+
+    def test_build_llm_prompt_contains_diff(self):
+        diff_sample = "diff --git a/file.py b/file.py\n--- a/file.py\n+++ b/file.py\n@@ -1,3 +1,3 @@"
+        prompt = build_llm_prompt(diff_sample)
+        self.assertIn(diff_sample, prompt)
+        self.assertIn("You are an expert code reviewer", prompt)
+        self.assertTrue(prompt.startswith("You are"))
+        self.assertTrue(prompt.endswith(diff_sample))
 
 if __name__ == "__main__":
     unittest.main()
