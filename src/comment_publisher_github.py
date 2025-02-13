@@ -13,9 +13,9 @@ def publish_comment(comment_obj, config):
       - (optionnel) "context": si fourni, il sera remplacé par le contexte récupéré automatiquement
     """
     repo = os.getenv("GITHUB_REPOSITORY")
-    pr_number = os.getenv("GITHUB_PR_NUMBER")
+    pr_number = os.getenv("PR_NUMBER_GITHUB")
     if not repo or not pr_number:
-        logging.error("Les variables d'environnement GITHUB_REPOSITORY et GITHUB_PR_NUMBER doivent être définies.")
+        logging.error("Les variables d'environnement GITHUB_REPOSITORY et PR_NUMBER_GITHUB doivent être définies.")
         return False
 
     file_info = comment_obj.get("file", "unknown file")
