@@ -17,10 +17,10 @@ def publish_comment(comment_obj, config):
       - The feedback provided by the LLM.
       - The code context in a syntax-highlighted block (if provided).
     """
-    repo = os.getenv("GITHUB_REPOSITORY")  # Expected format: "owner/repo"
-    pr_number = os.getenv("GITHUB_PR_NUMBER")
+    repo = os.getenv("REPOSITORY_GITHUB")  # Expected format: "owner/repo"
+    pr_number = os.getenv("PR_NUMBER_GITHUB")
     if not repo or not pr_number:
-        logging.error("Environment variables GITHUB_REPOSITORY and GITHUB_PR_NUMBER must be set.")
+        logging.error("Environment variables REPOSITORY_GITHUB and PR_NUMBER_GITHUB must be set.")
         return False
 
     file_info = comment_obj.get("file", "unknown file")
