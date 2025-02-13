@@ -12,10 +12,10 @@ def publish_comment(comment_obj, config):
       - "comment": feedback du LLM
       - (optionnel) "context": si fourni, il sera remplacé par le contexte récupéré automatiquement
     """
-    repo = os.getenv("GITHUB_REPOSITORY")
+    repo = os.getenv("REPOSITORY_GITHUB")
     pr_number = os.getenv("PR_NUMBER_GITHUB")
     if not repo or not pr_number:
-        logging.error("Les variables d'environnement GITHUB_REPOSITORY et PR_NUMBER_GITHUB doivent être définies.")
+        logging.error("Les variables d'environnement REPOSITORY_GITHUB et PR_NUMBER_GITHUB doivent être définies.")
         return False
 
     file_info = comment_obj.get("file", "unknown file")
@@ -75,10 +75,10 @@ def get_code_context(file_path, line_number, context_lines=3, ref=None):
     Raises:
       Exception: en cas d'erreur lors de la récupération du fichier.
     """
-    repo = os.getenv("GITHUB_REPOSITORY")  # Doit être au format "owner/repo"
+    repo = os.getenv("REPOSITORY_GITHUB")  # Doit être au format "owner/repo"
     token = os.getenv("GITHUB_TOKEN")
     if not repo or not token:
-        raise ValueError("Les variables d'environnement GITHUB_REPOSITORY et GITHUB_TOKEN doivent être définies.")
+        raise ValueError("Les variables d'environnement REPOSITORY_GITHUB et GITHUB_TOKEN doivent être définies.")
     
     # Utilise le ref spécifié, ou celui défini par défaut dans l'environnement
     if not ref:
