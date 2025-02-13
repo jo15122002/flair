@@ -1,7 +1,7 @@
 import logging
 import json
 from config import load_config
-from diff_extractor import get_diff_from_pr, split_diff
+from diff_extractor import get_diff_from_pr, filter_diff, split_diff_intelligent
 from llm_client import query_llm, extract_json_from_text
 from comment_publisher import post_comments
 
@@ -20,8 +20,11 @@ def main():
         logging.error("Aucun diff récupéré. Vérifiez les variables d'environnement et les permissions.")
         return
 
-    # 2. Segmenter le diff si nécessaire
-    chunks = split_diff(diff, config.DIFF_CHUNK_SIZE)
+    # Filtrer les fichiers de test
+    diff_filtered = filter_diff(diff)
+    
+    # 2. Segmenter le diff de façon intelligente
+    chunks = split_diff_intelligent(diff_filtered, max_lines=1000)
     logging.info("Diff découpé en %d chunk(s).", len(chunks))
     
     all_comments = []
@@ -38,7 +41,6 @@ def main():
             logging.error("Réponse du LLM pour le chunk %d vide ou malformée.", i+1)
             continue
         
-        # Utiliser la fonction extract_json_from_text pour extraire le JSON
         parsed_response = extract_json_from_text(response_content)
         if parsed_response is None:
             logging.error("Impossible d'extraire le JSON du chunk %d.", i+1)
