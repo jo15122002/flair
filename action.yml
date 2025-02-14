@@ -43,5 +43,8 @@ runs:
         DIFF_CHUNK_SIZE: ${{ inputs.diff-chunk-size }}
         EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
         CI_PLATFORM: github
+        # Injection des informations du dépôt et de la pull request à partir du contexte GitHub
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
-        python src/main.py
+        python main.py
