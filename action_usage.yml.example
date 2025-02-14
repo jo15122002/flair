@@ -1,0 +1,16 @@
+name: "Automated Code Review"
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  code_review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run LLM Code Review
+        uses: jo15122002/flair@v1
+        with:
+          llm-endpoint: ${{ secrets.LLM_ENDPOINT }}
+          diff-chunk-size: 10000
+          exclude-patterns: "test,tests,spec"
