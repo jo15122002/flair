@@ -1,0 +1,35 @@
+import os
+import sys
+import requests
+
+def delete_all_pr_comments():
+    repo = os.getenv("REPOSITORY_GITHUB")
+    pr_number = os.getenv("PR_NUMBER_GITHUB")
+    token = os.getenv("GITHUB_TOKEN")
+    if not repo or not pr_number or not token:
+        print("Les variables d'environnement GITHUB_REPOSITORY, GITHUB_PR_NUMBER et GITHUB_TOKEN doivent être définies.")
+        sys.exit(1)
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+
+    url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        print("Erreur lors de la récupération des commentaires :", response.text)
+        sys.exit(1)
+
+    comments = response.json()
+    for comment in comments:
+        comment_id = comment.get("id")
+        del_url = f"https://api.github.com/repos/{repo}/issues/comments/{comment_id}"
+        del_resp = requests.delete(del_url, headers=headers)
+        if del_resp.status_code == 204:
+            print(f"Commentaire {comment_id} supprimé.")
+        else:
+            print(f"Échec de suppression du commentaire {comment_id} : {del_resp.text}")
+
+if __name__ == "__main__":
+    delete_all_pr_comments()
