@@ -44,4 +44,4 @@ runs:
         EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
         CI_PLATFORM: github
       run: |
-        python main.py
+        python src/main.py
