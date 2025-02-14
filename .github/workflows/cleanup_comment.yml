@@ -1,0 +1,55 @@
+name: "Cleanup PR Comments"
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Numéro de la pull request à nettoyer"
+        required: true
+        default: ""
+
+jobs:
+  delete-pr-comments:
+    name: "Delete All PR Comments"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Delete PR Comments
+        env:
+          REPOSITORY_GITHUB: ${{ github.repository }}
+          # Utiliser l'input si fourni, sinon essayer d'utiliser le contexte PR
+          PR_NUMBER_GITHUB: ${{ github.event.inputs.pr_number != '' && github.event.inputs.pr_number || github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python delete_pr_comments.py
+
+  delete-workflow-comments:
+    name: "Delete Workflow Comments"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Delete Workflow Comments
+        env:
+          REPOSITORY_GITHUB: ${{ github.repository }}
+          PR_NUMBER_GITHUB: ${{ github.event.inputs.pr_number != '' && github.event.inputs.pr_number || github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python delete_workflow_comments.py
