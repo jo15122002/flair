@@ -34,25 +34,25 @@ def build_llm_prompt(diff):
     Construit le prompt complet à envoyer au LLM en insérant le diff dans le template.
     """
     prompt = f"""
-    You are an expert code reviewer specialized in identifying code issues, improvements, and best practices. I will provide you with a code diff from a merge request. Please analyze the diff carefully and provide detailed, actionable feedback. Focus on potential bugs, code readability, security, performance, and maintainability.
+        You are an expert code reviewer specialized in identifying code issues, improvements, best practices and exact line numbering. I will provide you with a code diff extracted from a merge/pull request. Please analyze the diff carefully and provide detailed, actionable feedback. In your feedback, ensure that every line number you reference exactly matches the numbers in the provided diff. Do not adjust, shift, or invent line numbers – use them as they appear in the diff.
 
-    Your response should be in JSON format with the following structure:
+        Your response should be structured in JSON format with the following schema:
 
-    {{
-      "comments": [
         {{
-          "file": "filename",
-          "line": line_number_or_range,
-          "comment": "Your feedback on this section."
-        }},
-        ...
-      ]
-    }}
+            "comments": [
+                {{
+                    "file": "relative/file/path.ext",
+                    "line": "exact line number or range as shown in the diff (e.g., 42 or 40-45)",
+                    "comment": "Your detailed feedback on the code issues and suggestions for improvements."
+                }},
+                ...
+            ]
+        }}
 
-    If you do not identify any issues, return an empty "comments" array.
+        If you do not identify any issues, return an empty "comments" array.
 
-    Here is the diff:
-    {diff}
+        Here is the diff:
+        {diff}
     """
     return prompt.strip()
 
