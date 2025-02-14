@@ -21,7 +21,7 @@ def main():
         return
 
     # Filtrer les fichiers de tests et autres exclusions
-    diff_filtered = filter_diff(diff)
+    diff_filtered = filter_diff(diff, exclude_patterns=config.EXCLUDE_PATTERNS)
     
     # 2. Découpage intelligent du diff (par bloc de fichier / par nombre de lignes)
     chunks = split_diff_intelligent(diff_filtered, max_lines=1000)
