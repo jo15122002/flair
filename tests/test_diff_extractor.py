@@ -71,7 +71,7 @@ class TestDiffExtractor(unittest.TestCase):
         # Configurer les variables d'environnement simulées
         os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "1"
-        os.environ["TOKEN_GITHUB"] = "dummy_token"
+        os.environ["GITHUB_TOKEN"] = "dummy_token"
         
         fake_diff = "diff --git a/file.py b/file.py\n..."
         fake_response = MagicMock(status_code=200)
@@ -87,7 +87,7 @@ class TestDiffExtractor(unittest.TestCase):
         # Configurer les variables d'environnement simulées
         os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "1"
-        os.environ["TOKEN_GITHUB"] = "dummy_token"
+        os.environ["GITHUB_TOKEN"] = "dummy_token"
         
         # Simuler une exception lors de l'appel HTTP
         mock_get.side_effect = requests.exceptions.RequestException("Erreur")
@@ -98,7 +98,7 @@ class TestDiffExtractor(unittest.TestCase):
         # S'assurer que l'absence de variables d'environnement retourne None
         os.environ.pop("REPOSITORY_GITHUB", None)
         os.environ.pop("PR_NUMBER_GITHUB", None)
-        os.environ.pop("TOKEN_GITHUB", None)
+        os.environ.pop("GITHUB_TOKEN", None)
         
         diff = get_diff_from_pr()
         self.assertIsNone(diff)

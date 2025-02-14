@@ -7,7 +7,7 @@ from src.comment_publisher_github import publish_comment
 
 class DummyConfig:
     GITHUB_API_URL = "https://api.github.com"
-    TOKEN_GITHUB = "dummy_token"
+    GITHUB_TOKEN = "dummy_token"
 
 class TestCommentPublisherGitHub(unittest.TestCase):
 

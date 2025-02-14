@@ -34,25 +34,21 @@ def build_llm_prompt(diff):
     Construit le prompt complet à envoyer au LLM en insérant le diff dans le template.
     """
     prompt = f"""
-    You are an expert code reviewer specialized in identifying code issues, improvements, and best practices. I will provide you with a code diff from a merge request. Please analyze the diff carefully and provide detailed, actionable feedback. Focus on potential bugs, code readability, security, performance, and maintainability.
-
-    Your response should be in JSON format with the following structure:
-
-    {{
-      "comments": [
+        You are an expert code reviewer specialized in identifying code issues, improvements, and best practices. I will provide you with a code diff from a merge request. Please analyze the diff carefully and provide detailed, actionable feedback. Focus on potential bugs, code readability, security, performance, and maintainability.
+        Your response should be in JSON format with the following structure:
         {{
-          "file": "filename",
-          "line": line_number_or_range,
-          "comment": "Your feedback on this section."
-        }},
-        ...
-      ]
-    }}
-
-    If you do not identify any issues, return an empty "comments" array.
-
-    Here is the diff:
-    {diff}
+            "comments": [
+                {{
+                    "file": "filename",
+                    "line": line_number_or_range,
+                    "comment": "Your feedback on this section."
+                }},
+                ...
+            ]
+        }}
+        If you do not identify any issues, return an empty "comments" array.
+        Here is the diff:
+        {diff}
     """
     return prompt.strip()
 
@@ -87,6 +83,48 @@ def extract_json_from_text(text):
             return None
     return None
 
+def adjust_line_number_from_diff(diff_chunk, reported_line):
+    """
+    Ajuste le numéro de ligne rapporté par le LLM en se basant sur les hunk headers du diff.
+    
+    Args:
+        diff_chunk (str): Un segment de diff (contenant éventuellement plusieurs hunks).
+        reported_line (int): Le numéro de ligne fourni par le LLM (supposé concerner le nouveau fichier).
+    
+    Returns:
+        int: Le numéro de ligne ajusté basé sur les informations du diff.
+    """
+    # Expression régulière pour extraire le header d'un hunk, par exemple:
+    # @@ -10,7 +15,8 @@
+    hunk_regex = re.compile(r'@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@')
+    
+    best_candidate = None
+    smallest_distance = None
+
+    # Parcourir chaque hunk dans le diff
+    for match in hunk_regex.finditer(diff_chunk):
+        start_new = int(match.group(1))
+        count_new = int(match.group(2)) if match.group(2) is not None else 1
+        end_new = start_new + count_new - 1
+        
+        # Si le numéro rapporté se trouve dans ce hunk, on le renvoie directement
+        if start_new <= reported_line <= end_new:
+            return reported_line
+        
+        # Sinon, calculer la distance par rapport à ce hunk
+        if reported_line < start_new:
+            distance = start_new - reported_line
+            candidate = start_new
+        else:
+            distance = reported_line - end_new
+            candidate = end_new
+        
+        if smallest_distance is None or distance < smallest_distance:
+            smallest_distance = distance
+            best_candidate = candidate
+
+    # Si aucun hunk n'est trouvé, on renvoie le numéro rapporté tel quel
+    return best_candidate if best_candidate is not None else reported_line
 
 # main
 if __name__ == "__main__":
