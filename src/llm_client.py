@@ -87,6 +87,48 @@ def extract_json_from_text(text):
             return None
     return None
 
+def adjust_line_number_from_diff(diff_chunk, reported_line):
+    """
+    Ajuste le numéro de ligne rapporté par le LLM en se basant sur les hunk headers du diff.
+    
+    Args:
+        diff_chunk (str): Un segment de diff (contenant éventuellement plusieurs hunks).
+        reported_line (int): Le numéro de ligne fourni par le LLM (supposé concerner le nouveau fichier).
+    
+    Returns:
+        int: Le numéro de ligne ajusté basé sur les informations du diff.
+    """
+    # Expression régulière pour extraire le header d'un hunk, par exemple:
+    # @@ -10,7 +15,8 @@
+    hunk_regex = re.compile(r'@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@')
+    
+    best_candidate = None
+    smallest_distance = None
+
+    # Parcourir chaque hunk dans le diff
+    for match in hunk_regex.finditer(diff_chunk):
+        start_new = int(match.group(1))
+        count_new = int(match.group(2)) if match.group(2) is not None else 1
+        end_new = start_new + count_new - 1
+        
+        # Si le numéro rapporté se trouve dans ce hunk, on le renvoie directement
+        if start_new <= reported_line <= end_new:
+            return reported_line
+        
+        # Sinon, calculer la distance par rapport à ce hunk
+        if reported_line < start_new:
+            distance = start_new - reported_line
+            candidate = start_new
+        else:
+            distance = reported_line - end_new
+            candidate = end_new
+        
+        if smallest_distance is None or distance < smallest_distance:
+            smallest_distance = distance
+            best_candidate = candidate
+
+    # Si aucun hunk n'est trouvé, on renvoie le numéro rapporté tel quel
+    return best_candidate if best_candidate is not None else reported_line
 
 # main
 if __name__ == "__main__":
