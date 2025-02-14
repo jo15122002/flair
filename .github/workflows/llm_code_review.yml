@@ -1,61 +1,16 @@
-name: LLM Code Review
+name: "Automated Code Review"
 
 on:
   pull_request:
     types: [opened, synchronize]
 
-permissions:
-  issues: write
-  pull-requests: write
-
 jobs:
   code_review:
     runs-on: ubuntu-latest
-
     steps:
-      # Étape 1 : Checkout du code
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Étape 2 : Configuration de Python
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Run LLM Code Review
+        uses: jo15122002/flair@v1.0.0
         with:
-          python-version: '3.8'
-
-      # Étape 3 : Installation des dépendances
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      # Étape 4 : Lancer les tests unitaires
-      - name: Run tests
-        run: |
-          pytest
-
-      # Debug step to print environment variables
-      - name: Print environment variables
-        env:
-            REPOSITORY_GITHUB: ${{ github.repository }}
-            PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            LLM_ENDPOINT: ${{ secrets.LLM_ENDPOINT }}
-            DIFF_CHUNK_SIZE: 10000
-            CI_PLATFORM: github
-        run: |
-          printenv | grep LLM_ENDPOINT
-
-      # Étape 5 : Exécuter le script principal pour la revue de code
-      - name: Run LLM code review
-        env:
-          # Ces variables sont définies par GitHub Actions et/ou vos secrets
-          REPOSITORY_GITHUB: ${{ github.repository }}
-          PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Vous pouvez également définir ici d'autres variables nécessaires (par exemple, LLM_ENDPOINT, DIFF_CHUNK_SIZE, etc.)
-          LLM_ENDPOINT: ${{ secrets.LLM_ENDPOINT }}
-          DIFF_CHUNK_SIZE: 10000
-          CI_PLATFORM: github
-        run: |
-          python src/main.py
+          llm-endpoint: ${{ secrets.LLM_ENDPOINT }}
+          diff-chunk-size: 10000
+          exclude-patterns: "test,tests,spec"
