@@ -1,18 +1,23 @@
 name: "LLM Code Review Action"
 description: "An automated code review action that uses an LLM (e.g., Qwen2.5-coder) to analyze diffs and post review comments on pull requests."
-author: "jo15122002"
+author: "Votre Nom ou Organisation"
+
 inputs:
   llm-endpoint:
-    description: "Endpoint URL of the LLM server (e.g., https://your-llm.example.com/completion)"
+    description: "Endpoint URL of the LLM server (e.g., https://your-llm.example.com/predict)"
     required: true
   diff-chunk-size:
-    description: "Maximum size (in characters or max lines) for diff chunks"
+    description: "Maximum size for diff chunks (in lines or characters)"
     required: false
     default: "10000"
   exclude-patterns:
     description: "Comma-separated list of file patterns to exclude (e.g., test,tests,spec)"
     required: false
     default: "test,tests,spec"
+  github-token:
+    description: "GitHub token for authentication"
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -25,16 +30,18 @@ runs:
         python-version: '3.8'
 
     - name: Install Dependencies
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Run LLM Code Review
+      shell: bash
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
         LLM_ENDPOINT: ${{ inputs.llm-endpoint }}
         DIFF_CHUNK_SIZE: ${{ inputs.diff-chunk-size }}
         EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
         CI_PLATFORM: github
       run: |
-        python src/main.py
+        python main.py
