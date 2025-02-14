@@ -18,7 +18,9 @@ class Config:
     # Configuration spécifique à GitLab (pour une future extension)
     GITLAB_API_URL = os.getenv("GITLAB_API_URL", "https://gitlab.example.com/api/v4")
     GITLAB_PRIVATE_TOKEN = os.getenv("GITLAB_PRIVATE_TOKEN", "")
-
+    
+    # Autres variables de configuration...
+    EXCLUDE_PATTERNS = os.getenv("EXCLUDE_PATTERNS", "test,tests,spec").split(',')
 def load_config():
     return Config
 

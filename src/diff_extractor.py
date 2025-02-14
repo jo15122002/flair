@@ -72,29 +72,29 @@ def split_diff(diff, chunk_size):
     return [diff[i:i+chunk_size] for i in range(0, len(diff), chunk_size)]
 
 def filter_diff(diff, exclude_patterns=None):
-    """
-    Filtre le diff pour exclure les fichiers dont le chemin contient un motif
-    indésirable (par défaut : "test", "tests", "spec").
-    """
+    def filter_diff(diff, exclude_patterns=None):
+        """
+        Filtre le diff pour exclure les fichiers dont le chemin contient un motif
+        indésirable.
+        Si aucun pattern n'est fourni, on utilise une liste par défaut.
+        """
     if exclude_patterns is None:
         exclude_patterns = ['test', 'tests', 'spec']
     
     filtered_lines = []
     skip_file = False
     for line in diff.splitlines():
-        # Détection du début d'un bloc de fichier
+        # Détecte le début d'un bloc de fichier
         if line.startswith("diff --git"):
             # Exemple de ligne : "diff --git a/src/main.py b/src/main.py"
-            # On extrait le nom du fichier (partie après "a/")
             parts = line.split()
             if len(parts) >= 3:
                 file_a = parts[2]  # attend "a/chemin/du/fichier"
                 filename = file_a[2:] if file_a.startswith("a/") else file_a
-                # Si le nom du fichier contient un des motifs d'exclusion, on active le flag
-                skip_file = any(pat.lower() in filename.lower() for pat in exclude_patterns)
+                # Vérifie si le nom de fichier contient un des motifs d'exclusion
+                skip_file = any(pat.strip().lower() in filename.lower() for pat in exclude_patterns)
             filtered_lines.append(line)
         else:
-            # On n'ajoute la ligne que si le fichier n'est pas à exclure
             if not skip_file:
                 filtered_lines.append(line)
     return "\n".join(filtered_lines)
