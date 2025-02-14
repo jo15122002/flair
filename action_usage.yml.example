@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run LLM Code Review
-        uses: jo15122002/flair@v1.0.5
+        uses: jo15122002/flair@main
         with:
           llm-endpoint: ${{ secrets.LLM_ENDPOINT }}
           diff-chunk-size: 10000
