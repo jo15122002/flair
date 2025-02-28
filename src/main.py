@@ -19,16 +19,16 @@ def main():
     if not diff:
         logging.error("Aucun diff récupéré. Vérifiez les variables d'environnement et les permissions.")
         return
-
-    # Filtrer les fichiers de tests et autres exclusions
-    diff_filtered = filter_diff(diff, exclude_patterns=config.EXCLUDE_PATTERNS)
     
     # Prétraiter le diff pour ajouter les numéros de ligne
-    diff_with_line_numbers = preprocess_diff_with_line_numbers(diff_filtered)
+    diff_with_line_numbers = preprocess_diff_with_line_numbers(diff)
     logging.info("Diff prétraité avec numéros de ligne.")
+
+    # Filtrer les fichiers de tests et autres exclusions
+    diff_filtered = filter_diff(diff_with_line_numbers, exclude_patterns=config.EXCLUDE_PATTERNS)
     
     # 2. Découpage intelligent du diff (par bloc de fichier / par nombre de lignes)
-    chunks = split_diff_intelligent(diff_with_line_numbers, max_lines=1000)
+    chunks = split_diff_intelligent(diff_filtered, max_lines=1000)
     logging.info("Diff découpé en %d chunk(s).", len(chunks))
     
     all_comments = []
