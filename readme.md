@@ -296,8 +296,6 @@ Contributions are welcome! To contribute:
 3. Write tests and ensure all tests pass.
 4. Submit a pull request with detailed explanations.
 
-Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md) and our [Contributing Guidelines](./CONTRIBUTING.md).
-
 ---
 
 ## License
@@ -308,7 +306,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For questions or support, please open an issue in this repository or contact [your-email@example.com](mailto:your-email@example.com).
+For questions or support, please open an issue in this repository.
 
 ---
 
