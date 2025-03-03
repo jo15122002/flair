@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "Numéro de la pull request à nettoyer"
+        description: "Pull request number to clean up"
         required: true
         default: ""
 
@@ -27,10 +27,9 @@ jobs:
       - name: Delete PR Comments
         env:
           REPOSITORY_GITHUB: ${{ github.repository }}
-          # Utiliser l'input si fourni, sinon essayer d'utiliser le contexte PR
           PR_NUMBER_GITHUB: ${{ github.event.inputs.pr_number != '' && github.event.inputs.pr_number || github.event.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python delete_pr_comments.py
+        run: python src/delete_pr_comments.py
 
   delete-workflow-comments:
     name: "Delete Workflow Comments"
@@ -52,4 +51,4 @@ jobs:
           REPOSITORY_GITHUB: ${{ github.repository }}
           PR_NUMBER_GITHUB: ${{ github.event.inputs.pr_number != '' && github.event.inputs.pr_number || github.event.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python delete_workflow_comments.py
+        run: python src/delete_workflow_comments.py

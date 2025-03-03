@@ -12,7 +12,10 @@ jobs:
   code_review:
     runs-on: ubuntu-latest
     steps:
-      - name: Run LLM Code Review
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Run LLM Code Review Action
         uses: jo15122002/flair@main
         with:
           llm-endpoint: ${{ secrets.LLM_ENDPOINT }}
