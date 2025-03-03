@@ -1,10 +1,6 @@
-Below is a comprehensive, refactored README.md that covers everything—from project overview and features to installation, configuration, usage, testing, and contribution guidelines.
+# FLAIR
 
----
-
-# LLM Code Review Action
-
-**LLM Code Review Action** is a reusable GitHub Action that integrates an LLM (such as Qwen2.5-coder) into your CI/CD pipeline to automatically analyze code diffs and post review comments on pull requests. It pre-processes diffs (adding explicit line numbers), filters out unwanted files (e.g., tests), intelligently splits large diffs, queries the LLM for detailed feedback, adjusts reported line numbers based on diff hunks, and finally posts formatted comments (with code context) to the pull request.
+**Feedback LLM for Automated Intelligent Review** is a reusable GitHub Action that integrates an LLM (such as Qwen2.5-coder) into your CI/CD pipeline to automatically analyze code diffs and post review comments on pull requests. It pre-processes diffs (adding explicit line numbers), filters out unwanted files (e.g., tests), intelligently splits large diffs, queries the LLM for detailed feedback, adjusts reported line numbers based on diff hunks, and finally posts formatted comments (with code context) to the pull request.
 
 ---
 
