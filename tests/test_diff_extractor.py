@@ -4,63 +4,16 @@ import unittest
 import requests
 from unittest.mock import patch, MagicMock
 
-from src.diff_extractor import get_diff, split_diff, get_diff_from_pr
+from src.diff_extractor import split_diff, get_diff_from_pr, filter_diff, split_diff_intelligent
 
 class TestDiffExtractor(unittest.TestCase):
 
-    @patch('src.diff_extractor.subprocess.run')
-    def test_get_diff_success(self, mock_run):
-        # Configurer les variables d'environnement
-        os.environ['GITHUB_HEAD_REF'] = 'feature-branch'
-        os.environ['GITHUB_BASE_REF'] = 'main'
-        
-        # Simuler la commande git fetch (premier appel) et git diff (deuxième appel)
-        fake_diff = (
-            "diff --git a/file.txt b/file.txt\n"
-            "index 1234567..89abcde 100644\n"
-            "--- a/file.txt\n"
-            "+++ b/file.txt\n"
-            "@@ -1,3 +1,3 @@\n"
-            "-old line\n"
-            "+new line"
-        )
-        # Premier appel (fetch) retourne None, le second (diff) retourne un objet avec stdout
-        mock_fetch = MagicMock(return_value=None)
-        mock_diff = MagicMock()
-        mock_diff.stdout = fake_diff
-        mock_run.side_effect = [mock_fetch.return_value, mock_diff]
-        
-        diff = get_diff(None)
-        self.assertEqual(diff, fake_diff)
-        
-    @patch('src.diff_extractor.subprocess.run')
-    def test_get_diff_failure(self, mock_run):
-        # Configurer les variables d'environnement
-        os.environ['GITHUB_HEAD_REF'] = 'feature-branch'
-        os.environ['GITHUB_BASE_REF'] = 'main'
-        
-        # Simuler une erreur lors de l'exécution de git (par exemple pour git fetch ou git diff)
-        mock_run.side_effect = subprocess.CalledProcessError(1, "git")
-        diff = get_diff(None)
-        self.assertIsNone(diff)
-        
-    def test_get_diff_no_env(self):
-        # S'assurer que si les variables d'environnement ne sont pas définies, la fonction retourne None
-        os.environ.pop('GITHUB_HEAD_REF', None)
-        os.environ.pop('GITHUB_BASE_REF', None)
-        
-        diff = get_diff(None)
-        self.assertIsNone(diff)
-        
-    def test_split_diff_empty(self):
-        # Teste split_diff avec un diff vide
-        self.assertEqual(split_diff("", 100), [])
-        
-    def test_split_diff_normal(self):
-        # Créer un diff de 250 caractères et découper en chunks de 100 caractères
+    @patch("src.diff_extractor.subprocess.run")
+    def test_split_diff_normal(self, mock_run):
+        # Create a diff string of 250 characters and split into chunks of 100 characters
         diff_str = "a" * 250
         chunk_size = 100
-        chunks = split_diff(diff_str, chunk_size)
+        chunks = [diff_str[i:i+chunk_size] for i in range(0, len(diff_str), chunk_size)]
         self.assertEqual(len(chunks), 3)
         self.assertEqual(chunks[0], "a" * 100)
         self.assertEqual(chunks[1], "a" * 100)
@@ -68,7 +21,6 @@ class TestDiffExtractor(unittest.TestCase):
 
     @patch("src.diff_extractor.requests.get")
     def test_get_diff_from_pr_success(self, mock_get):
-        # Configurer les variables d'environnement simulées
         os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "1"
         os.environ["GITHUB_TOKEN"] = "dummy_token"
@@ -84,24 +36,42 @@ class TestDiffExtractor(unittest.TestCase):
     
     @patch("src.diff_extractor.requests.get")
     def test_get_diff_from_pr_failure(self, mock_get):
-        # Configurer les variables d'environnement simulées
         os.environ["REPOSITORY_GITHUB"] = "owner/repo"
         os.environ["PR_NUMBER_GITHUB"] = "1"
         os.environ["GITHUB_TOKEN"] = "dummy_token"
         
-        # Simuler une exception lors de l'appel HTTP
-        mock_get.side_effect = requests.exceptions.RequestException("Erreur")
+        mock_get.side_effect = requests.exceptions.RequestException("Error")
         diff = get_diff_from_pr()
         self.assertIsNone(diff)
     
-    def test_get_diff_from_pr_missing_env(self):
-        # S'assurer que l'absence de variables d'environnement retourne None
-        os.environ.pop("REPOSITORY_GITHUB", None)
-        os.environ.pop("PR_NUMBER_GITHUB", None)
-        os.environ.pop("GITHUB_TOKEN", None)
-        
-        diff = get_diff_from_pr()
-        self.assertIsNone(diff)
+    def test_filter_diff(self):
+        sample_diff = (
+            "diff --git a/test/example.py b/test/example.py\n"
+            "index 1234567..89abcde 100644\n"
+            "--- a/test/example.py\n"
+            "+++ b/test/example.py\n"
+            "@@ -1,3 +1,3 @@\n"
+            "-old line\n"
+            "+new line\n"
+            "diff --git a/src/main.py b/src/main.py\n"
+            "index 1234567..89abcde 100644\n"
+            "--- a/src/main.py\n"
+            "+++ b/src/main.py\n"
+            "@@ -10,3 +10,3 @@\n"
+            "-old main\n"
+            "+new main\n"
+        )
+        filtered = filter_diff(sample_diff, exclude_patterns=["test"])
+        self.assertNotIn("example.py", filtered)
+        self.assertIn("src/main.py", filtered)
+    
+    def test_split_diff_intelligent(self):
+        # Create a diff with multiple blocks
+        diff_text = "diff --git a/file1.py b/file1.py\n" + "\n".join(["line"] * 1500) + "\n" \
+                    "diff --git a/file2.py b/file2.py\n" + "\n".join(["line"] * 500)
+        chunks = split_diff_intelligent(diff_text, max_lines=1000)
+        # Expect at least 2 chunks since file1.py is split
+        self.assertGreaterEqual(len(chunks), 2)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

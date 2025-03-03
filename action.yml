@@ -1,6 +1,6 @@
 name: "LLM Code Review Action"
 description: "An automated code review action that uses an LLM (e.g., Qwen2.5-coder) to analyze diffs and post review comments on pull requests."
-author: "Votre Nom ou Organisation"
+author: "Your Name or Organization"
 
 inputs:
   llm-endpoint:
@@ -43,7 +43,7 @@ runs:
         DIFF_CHUNK_SIZE: ${{ inputs.diff-chunk-size }}
         EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
         CI_PLATFORM: github
-        # Injection des informations du dépôt et de la pull request à partir du contexte GitHub
+        # Inject GitHub repository and PR number from the GitHub Actions context
         REPOSITORY_GITHUB: ${{ github.repository }}
         PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
       run: |
