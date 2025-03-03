@@ -1,12 +1,13 @@
 import logging
 import re
 import subprocess
+
 import requests
-import os
+
 
 def get_diff_from_pr():
     """
-    Retrieves the diff directly via the GitHub API using the pull request diff URL.
+    Retrieves the diff via the GitHub API.
     Requires REPOSITORY_GITHUB, PR_NUMBER_GITHUB, and GITHUB_TOKEN to be set.
     """
     repo = os.getenv("REPOSITORY_GITHUB")
@@ -38,17 +39,14 @@ def get_diff_from_pr():
         return None
 
 def split_diff(diff, chunk_size):
-    """
-    Splits the diff into chunks of 'chunk_size' characters.
-    """
+    """Splits the diff into chunks of 'chunk_size' characters."""
     if not diff:
         return []
     return [diff[i:i+chunk_size] for i in range(0, len(diff), chunk_size)]
 
 def filter_diff(diff, exclude_patterns=None):
     """
-    Filters the diff to exclude entire file blocks whose paths contain any undesirable pattern.
-    A file block (including its header) is removed if its file path contains any pattern in exclude_patterns.
+    Filters the diff to exclude file blocks whose paths contain any unwanted pattern.
     """
     if exclude_patterns is None:
         exclude_patterns = ['test', 'tests', 'spec']
@@ -57,16 +55,13 @@ def filter_diff(diff, exclude_patterns=None):
     skip_file = False
     for line in diff.splitlines():
         if line.startswith("diff --git"):
-            # Determine file name from header line
             parts = line.split()
             if len(parts) >= 3:
-                file_a = parts[2]  # expected format: "a/path/to/file"
+                file_a = parts[2]  # e.g. "a/path/to/file"
                 filename = file_a[2:] if file_a.startswith("a/") else file_a
-                # If any pattern is found in filename, mark to skip this file block
                 skip_file = any(pat.strip().lower() in filename.lower() for pat in exclude_patterns)
             else:
                 skip_file = False
-            # Only add the header if this block is not to be skipped
             if not skip_file:
                 filtered_lines.append(line)
         else:
@@ -76,8 +71,7 @@ def filter_diff(diff, exclude_patterns=None):
 
 def split_diff_intelligent(diff, max_lines=1000):
     """
-    Splits the diff into file blocks and subdivides blocks that exceed max_lines.
-    Assumes each file diff block starts with "diff --git".
+    Splits the diff into file blocks and further subdivides blocks that exceed max_lines.
     """
     blocks = re.split(r'(?=^diff --git)', diff, flags=re.MULTILINE)
     chunks = []
@@ -95,14 +89,9 @@ def split_diff_intelligent(diff, max_lines=1000):
 
 def preprocess_diff_with_line_numbers(diff):
     """
-    Processes a unified diff by annotating it with the new file's line numbers.
-    
-    - For context lines (starting with ' ') and added lines (starting with '+'),
-      prefixes the line with "Line <number>:" and increments the counter.
-    - For removed lines (starting with '-'), annotates with "[REMOVED]" (without incrementing).
-    - Hunk headers are preserved.
-    
-    Returns the annotated diff as a string.
+    Annotates the diff with new file line numbers.
+    Context and added lines are prefixed with "Line <number>:".
+    Removed lines are marked with "[REMOVED]".
     """
     lines = diff.splitlines()
     processed_lines = []
@@ -133,3 +122,38 @@ def preprocess_diff_with_line_numbers(diff):
             processed_lines.append(line)
     
     return "\n".join(processed_lines)
+
+def extract_file_paths(diff):
+    """
+    Extracts a set of file paths from the diff.
+    Looks for lines starting with "diff --git" and extracts the path from the "a/" side.
+    """
+    file_paths = set()
+    for line in diff.splitlines():
+        if line.startswith("diff --git"):
+            parts = line.split()
+            if len(parts) >= 3:
+                file_a = parts[2]
+                file_path = file_a[2:] if file_a.startswith("a/") else file_a
+                file_paths.add(file_path)
+    return file_paths
+
+def get_full_file_content(file_path):
+    """
+    Retrieves the full content of the specified file using the GitHub API.
+    Requires REPOSITORY_GITHUB and GITHUB_TOKEN to be set.
+    """
+    repo = os.getenv("REPOSITORY_GITHUB")
+    token = os.getenv("GITHUB_TOKEN")
+    if not repo or not token:
+        raise ValueError("Environment variables REPOSITORY_GITHUB and GITHUB_TOKEN must be set.")
+    
+    url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3.raw"
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Error retrieving file {file_path}: {response.status_code} - {response.text}")
+    return response.text
