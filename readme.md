@@ -32,6 +32,38 @@ Ce projet est conçu pour automatiser la revue de code et la gestion des comment
   - [tests/test_llm_client.py](tests/test_llm_client.py)  
   - [tests/test_comment_publisher_github.py](tests/test_comment_publisher_github.py)
 
+```
+  Directory structure:
+  └── jo15122002-flair/
+    ├── readme.md
+    ├── LICENSE
+    ├── action.yml
+    ├── action_usage.yml.example
+    ├── requirements.txt
+    ├── .env.example
+    ├── src/
+    │   ├── __init__.py
+    │   ├── comment_publisher.py
+    │   ├── comment_publisher_github.py
+    │   ├── config.py
+    │   ├── delete_pr_comments.py
+    │   ├── delete_workflow_comments.py
+    │   ├── diff_extractor.py
+    │   ├── llm_client.py
+    │   ├── main.py
+    │   └── utils.py
+    ├── tests/
+    │   ├── __init__.py
+    │   ├── test_comment_publisher.py
+    │   ├── test_comment_publisher_github.py
+    │   ├── test_diff_extractor.py
+    │   └── test_llm_client.py
+    └── .github/
+        └── workflows/
+            ├── cleanup_comment.yml
+            └── llm_code_review.yml
+```
+
 ## Prérequis
 
 - Python 3.8 ou supérieur.

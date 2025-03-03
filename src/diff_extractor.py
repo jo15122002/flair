@@ -128,3 +128,53 @@ def split_diff_intelligent(diff, max_lines=1000):
                 sub_block = "\n".join(lines[i:i+max_lines])
                 chunks.append(sub_block)
     return chunks
+
+import re
+
+def preprocess_diff_with_line_numbers(diff):
+    """
+    Prend en entrée un diff unifié et renvoie une version annotée
+    avec les numéros de ligne du nouveau fichier.
+
+    - Pour les lignes de contexte (commençant par ' '), on affiche le numéro de ligne et incrémente.
+    - Pour les lignes ajoutées (commençant par '+'), on affiche le numéro et incrémente.
+    - Pour les lignes supprimées (commençant par '-'), on affiche un marqueur "[REMOVED]" sans incrémenter.
+    - Les hunk headers (commençant par '@@') sont conservés pour garder la structure.
+    
+    Retourne une chaîne de caractères avec le diff prétraité.
+    """
+    lines = diff.splitlines()
+    processed_lines = []
+    new_line_number = None
+    # Expression régulière pour détecter les hunk headers, par exemple: @@ -20,7 +20,8 @@
+    hunk_header_pattern = re.compile(r'^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@')
+
+    for line in lines:
+        if line.startswith('@@'):
+            # Extraire le numéro de départ du nouveau fichier depuis le hunk header
+            match = hunk_header_pattern.match(line)
+            if match:
+                new_line_number = int(match.group(1))
+            processed_lines.append(line)
+        elif new_line_number is not None:
+            if line.startswith(' '):
+                # Ligne de contexte
+                annotated_line = f"Line {new_line_number}: {line[1:]}"
+                processed_lines.append(annotated_line)
+                new_line_number += 1
+            elif line.startswith('+'):
+                # Ligne ajoutée
+                annotated_line = f"Line {new_line_number}: {line[1:]}"
+                processed_lines.append(annotated_line)
+                new_line_number += 1
+            elif line.startswith('-'):
+                # Ligne supprimée, on indique qu'elle a été supprimée sans incrémenter
+                annotated_line = f"[REMOVED] {line[1:]}"
+                processed_lines.append(annotated_line)
+            else:
+                processed_lines.append(line)
+        else:
+            # Si on n'est pas dans un hunk, on conserve la ligne telle quelle
+            processed_lines.append(line)
+    
+    return "\n".join(processed_lines)
