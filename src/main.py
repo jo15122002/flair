@@ -1,9 +1,14 @@
-import logging
 import json
-from config import load_config
-from diff_extractor import get_diff_from_pr, filter_diff, preprocess_diff_with_line_numbers, split_diff_intelligent
-from llm_client import query_llm, extract_json_from_text, adjust_line_number_from_diff, build_llm_prompt
+import logging
+
 from comment_publisher import post_comments
+from config import load_config
+from diff_extractor import (filter_diff, get_diff_from_pr,
+                            preprocess_diff_with_line_numbers,
+                            split_diff_intelligent)
+from llm_client import (adjust_line_number_from_diff, build_llm_prompt,
+                        extract_json_from_text, query_llm)
+
 
 def main():
     # Load configuration and initialize logging
@@ -32,6 +37,9 @@ def main():
     logging.info("Diff split into %d chunk(s).", len(chunks))
     
     all_comments = []
+    
+    logging.info("Using gitingest: %s", config.USE_GITINGEST)
+    
     # 3. For each chunk, query the LLM
     for i, chunk in enumerate(chunks):
         logging.info("Sending chunk %d/%d to the LLM...", i+1, len(chunks))
