@@ -27,6 +27,7 @@ jobs:
       - name: Delete PR Comments
         env:
           REPOSITORY_GITHUB: ${{ github.repository }}
+          # Use the input if provided, else fallback to pull_request number
           PR_NUMBER_GITHUB: ${{ github.event.inputs.pr_number != '' && github.event.inputs.pr_number || github.event.pull_request.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python src/delete_pr_comments.py
