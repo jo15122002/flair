@@ -1,7 +1,9 @@
-import requests
-import logging
 import json
+import logging
 import re
+
+import requests
+
 
 def query_llm(diff_chunk, config, params=None):
     """
@@ -31,28 +33,28 @@ def build_llm_prompt(diff, config=None):
     If config.USE_GITINGEST is True, appends the full file contents for additional context.
     """
     prompt = f"""
-You are an expert code reviewer specialized in identifying code issues.
-Below is a code diff with explicit line numbers. Please analyze the diff carefully and provide detailed, actionable feedback.
-**Important:** Use the provided line numbers exactly as shown and do not shift them.
+        You are an expert code reviewer specialized in identifying code issues.
+        Below is a code diff with explicit line numbers. Please analyze the diff carefully and provide detailed, actionable feedback.
+        **Important:** Use the provided line numbers exactly as shown and do not shift them.
 
-Your response should be in JSON format with the following structure:
+        Your response should be in JSON format with the following structure:
 
-{{
-  "comments": [
-    {{
-      "file": "filename",
-      "line": "exact line number or range (e.g., 42 or 40-45)",
-      "comment": "Your feedback on this section."
-    }},
-    ...
-  ]
-}}
+        {{
+        "comments": [
+            {{
+            "file": "filename",
+            "line": "exact line number or range (e.g., 42 or 40-45)",
+            "comment": "Your feedback on this section."
+            }},
+            ...
+        ]
+        }}
 
-Here is the diff:
-{diff}
+        Here is the diff:
+        {diff}
     """
     if config and getattr(config, "USE_GITINGEST", False):
-        from src.diff_extractor import extract_file_paths, get_full_file_content
+        from diff_extractor import extract_file_paths, get_full_file_content
         file_paths = extract_file_paths(diff)
         prompt += "\n\n### Full File Contents for Context\n"
         for path in file_paths:

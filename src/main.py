@@ -33,7 +33,7 @@ def main():
     diff_filtered = filter_diff(diff_with_line_numbers, exclude_patterns=config.EXCLUDE_PATTERNS)
     
     # 2. Intelligently split diff into chunks (by file block or by number of lines)
-    chunks = split_diff_intelligent(diff_filtered, max_lines=1000)
+    chunks = split_diff_intelligent(diff_filtered, max_lines=config.DIFF_CHUNK_SIZE or 1000)
     logging.info("Diff split into %d chunk(s).", len(chunks))
     
     all_comments = []
