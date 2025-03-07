@@ -1,7 +1,9 @@
-import requests
-import logging
 import json
+import logging
 import re
+
+import requests
+
 
 def query_llm(diff_chunk, config, params=None):
     """
@@ -13,7 +15,7 @@ def query_llm(diff_chunk, config, params=None):
             "temperature": 0.7
         }
     
-    prompt = build_llm_prompt(diff_chunk)
+    prompt = build_llm_prompt(diff_chunk, config)
     payload = {"prompt": prompt}
     payload.update(params)
     
@@ -25,38 +27,49 @@ def query_llm(diff_chunk, config, params=None):
         logging.error("Error calling LLM: %s", e)
         return None
 
-def build_llm_prompt(diff):
+def build_llm_prompt(diff, config=None):
     """
-    Constructs the full prompt to send to the LLM by embedding the diff.
+    Constructs the full prompt for the LLM by embedding the diff.
+    If config.USE_GITINGEST is True, appends the full file contents for additional context.
     """
     prompt = f"""
-You are an expert code reviewer specialized in identifying code issues.
-Below is a code diff with explicit line numbers. Please analyze the diff carefully and provide detailed, actionable feedback.
-**Important:** Use the provided line numbers exactly as shown and do not shift them.
+        You are an expert code reviewer specialized in identifying code issues.
+        Below is a code diff with explicit line numbers. Please analyze the diff carefully and provide detailed, actionable feedback.
+        **Important:** Use the provided line numbers exactly as shown and do not shift them.
 
-Your response should be in JSON format with the following structure:
+        Your response should be in JSON format with the following structure:
 
-{{
-  "comments": [
-    {{
-      "file": "filename",
-      "line": "exact line number or range (e.g., 42 or 40-45)",
-      "comment": "Your feedback on this section."
-    }},
-    ...
-  ]
-}}
+        {{
+        "comments": [
+            {{
+            "file": "filename",
+            "line": "exact line number or range (e.g., 42 or 40-45)",
+            "comment": "Your feedback on this section."
+            }},
+            ...
+        ]
+        }}
 
-Here is the diff:
-{diff}
-"""
+        Here is the diff:
+        {diff}
+    """
+    if config and getattr(config, "USE_GITINGEST", False):
+        from diff_extractor import extract_file_paths, get_full_file_content
+        file_paths = extract_file_paths(diff)
+        prompt += "\n\n### Full File Contents for Context\n"
+        for path in file_paths:
+            try:
+                content = get_full_file_content(path)
+                prompt += f"\n**File: {path}**\n```python\n{content}\n```\n"
+            except Exception as e:
+                prompt += f"\n**File: {path}**\nError retrieving file: {e}\n"
     return prompt.strip()
 
 def extract_json_from_text(text):
     """
-    Extracts a JSON object from a text string by locating the first '{' and the last '}'.
-    If that fails, it attempts to use regex to find a JSON block.
-    Returns the parsed dictionary if successful, otherwise None.
+    Extracts a JSON object from text by locating the first '{' and the last '}'.
+    If that fails, attempts to use regex to find a JSON block.
+    Returns the parsed dictionary if successful; otherwise, None.
     """
     start = text.find('{')
     end = text.rfind('}')
@@ -111,7 +124,6 @@ def adjust_line_number_from_diff(diff_chunk, reported_line):
 
     return best_candidate if best_candidate is not None else reported_line
 
-# For testing purposes
 if __name__ == "__main__":
     from config import load_config
     config = load_config()
