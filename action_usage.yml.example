@@ -1,8 +1,8 @@
-name: "Automated Code Review"
+name: "Automated Code Review Example"
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
 
 permissions:
   issues: write
@@ -16,9 +16,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run LLM Code Review Action
-        uses: jo15122002/flair@main
+        uses: jo15122002/flair@v1.0.0
         with:
           llm-endpoint: ${{ secrets.LLM_ENDPOINT }}
-          diff-chunk-size: 10000
+          diff-chunk-size: "10000"
           exclude-patterns: "test,tests,spec"
           github-token: ${{ secrets.GITHUB_TOKEN }}
