@@ -47,4 +47,4 @@ runs:
         REPOSITORY_GITHUB: ${{ github.repository }}
         PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
       run: |
-        python src/main.py
+        python ${{ github.action_path }}/src/main.py
