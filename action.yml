@@ -1,50 +1,54 @@
-name: "LLM Code Review Action"
-description: "An automated code review action that uses an LLM (e.g., Qwen2.5-coder) to analyze diffs and post review comments on pull requests."
-author: "Your Name or Organization"
+name: "FLAIR — LLM Code Review"
+description: "Use an LLM to review PR diffs and post comments via GitHub Actions."
+author: "Your Name"
 
 inputs:
   llm-endpoint:
-    description: "Endpoint URL of the LLM server (e.g., https://your-llm.example.com/predict)"
+    description: "LLM server URL (e.g. http://localhost:8080/predict)"
     required: true
   diff-chunk-size:
-    description: "Maximum size for diff chunks (in lines or characters)"
+    description: "Max diff chunk size (chars)"
     required: false
     default: "10000"
   exclude-patterns:
-    description: "Comma-separated list of file patterns to exclude (e.g., test,tests,spec)"
+    description: "Comma-separated file patterns to skip (e.g. test,spec)"
     required: false
     default: "test,tests,spec"
   github-token:
-    description: "GitHub token for authentication"
+    description: "GitHub token with repo/comments write access"
     required: true
+  summary-mode:
+    description: "true to post one PR Review with summary+inline, false for per-comment"
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout Repository
+    - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: "3.8"
 
-    - name: Install Dependencies
+    - name: Install dependencies
       shell: bash
       run: |
         python -m pip install --upgrade pip
         pip install -r "${{ github.action_path }}/requirements.txt"
 
-    - name: Run LLM Code Review
+    - name: Run code review
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-        LLM_ENDPOINT: ${{ inputs.llm-endpoint }}
+        GITHUB_TOKEN:    ${{ inputs.github-token }}
+        LLM_ENDPOINT:    ${{ inputs.llm-endpoint }}
         DIFF_CHUNK_SIZE: ${{ inputs.diff-chunk-size }}
         EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
-        CI_PLATFORM: github
-        # Inject GitHub repository and PR number from the GitHub Actions context
-        REPOSITORY_GITHUB: ${{ github.repository }}
-        PR_NUMBER_GITHUB: ${{ github.event.pull_request.number }}
+        SUMMARY_MODE:    ${{ inputs.summary-mode }}
+        REPOSITORY:      ${{ github.repository }}
+        PR_NUMBER:       ${{ github.event.pull_request.number }}
+        GITHUB_API_URL:  https://api.github.com
       run: |
-        python ${{ github.action_path }}/src/main.py
+        python "${{ github.action_path }}/src/action.py"
