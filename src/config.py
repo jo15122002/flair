@@ -21,6 +21,8 @@ class Config:
     
     # Patterns to exclude from diff (converted to a list)
     EXCLUDE_PATTERNS = os.getenv("EXCLUDE_PATTERNS", "test,tests,spec").split(',')
+    # If true, emit a single summary comment instead of one-per-suggestion
+    SUMMARY_MODE = os.getenv("SUMMARY_MODE", "false").lower() in ["true","1","yes"]
 
 def load_config():
     return Config
