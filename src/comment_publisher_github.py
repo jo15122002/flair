@@ -57,6 +57,43 @@ def publish_comment(comment_obj, config):
     except requests.exceptions.RequestException as e:
         logging.error("Error publishing comment: %s", e)
         return False
+    
+def publish_review_summary(comments, config):
+    """
+    Posts one issue comment containing an overview and each suggestion as sub-items.
+    """
+    repo = os.getenv("REPOSITORY_GITHUB")
+    pr_number = os.getenv("PR_NUMBER_GITHUB")
+    if not repo or not pr_number:
+        logging.error("REPOSITORY_GITHUB and PR_NUMBER_GITHUB must be set.")
+        return False
+
+    # Build the overview
+    total = len(comments)
+    body = f"## Automated Code Review Summary\n\n"
+    body += f"I generated **{total}** suggestion{'s' if total>1 else ''}. See details below:\n\n"
+
+    # List each suggestion
+    for idx, c in enumerate(comments, start=1):
+        file = c.get("file","unknown file")
+        line = c.get("line","?")
+        text = c.get("comment","")
+        body += f"**{idx}. {file} (line {line})**\n> {text.replace(chr(10),chr(10)+'> ')}\n\n"
+
+    # Post a single issue comment
+    url = f"{config.GITHUB_API_URL}/repos/{repo}/issues/{pr_number}/comments"
+    headers = {
+        "Authorization": f"Bearer {config.GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    try:
+        r = requests.post(url, json={"body": body}, headers=headers)
+        r.raise_for_status()
+        logging.info("Posted summary review comment on PR #%s.", pr_number)
+        return True
+    except requests.exceptions.RequestException as e:
+        logging.error("Failed to post summary comment: %s", e)
+        return False
 
 def get_code_context(file_path, line_number, context_lines=3, ref=None):
     """
