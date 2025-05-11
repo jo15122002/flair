@@ -2,6 +2,7 @@ import requests
 import logging
 import json
 import re
+import ast
 
 PROMPT_TEMPLATE = """
 You are an expert code reviewer specialized in identifying code issues.
@@ -26,73 +27,86 @@ Here is the diff:
 """
 
 def build_llm_prompt(diff):
-    """
-    Injects the diff into the prompt template.
-    """
     return PROMPT_TEMPLATE.format(diff=diff)
 
 def call_llm(diff_chunk, cfg):
     """
     Sends a diff chunk to the LLM endpoint and returns the raw text.
-    Supports DeepCoder-style choices or a simple 'content' key.
+    Supports DeepCoder-style 'choices' or a simple 'content' key.
     """
     payload = {"prompt": build_llm_prompt(diff_chunk)}
     try:
         r = requests.post(cfg.LLM_ENDPOINT, json=payload)
         r.raise_for_status()
         data = r.json()
-        # DeepCoder-style
         if "choices" in data and isinstance(data["choices"], list):
             return data["choices"][0].get("text", "")
-        # fallback
         return data.get("content", "")
     except requests.exceptions.RequestException as e:
         logging.error("Error calling LLM: %s", e)
         return ""
 
-def extract_comments(text):
+def extract_comments(text: str) -> list[dict]:
     """
-    Pulls out the 'comments' array from an LLM response string.
-    Steps:
-      1. Strip out any <think>…</think> blocks and ```json fences```.
-      2. Locate the first JSON object or array in the result.
-      3. Quote any bare numeric ranges on "line" fields (e.g., 1-48 → "1-48").
-      4. Remove trailing commas before } or ].
-      5. Parse and return the comments list (or empty list on failure).
-    """
-    logging.info("LLM response: %s", text)
+    Extrait la liste 'comments' d'un retour de LLM, même si :
+      - des ranges numériques non-quotés subsistent (e.g. 1-53),
+      - il y a des virgules superflues,
+      - ou des fences Markdown entourent le JSON.
 
-    # 1) Remove internal think tags and code fences
+    Retourne une liste vide en cas d’échec complet.
+    """
+    # 1) Enlever les balises <think>…</think>
     cleaned = re.sub(r'<think>[\s\S]*?</think>', '', text, flags=re.IGNORECASE)
-    cleaned = re.sub(r'```(?:json)?', '', cleaned)
 
-    # 2) Extract JSON object or array
-    match = re.search(r'({[\s\S]*})', cleaned)
-    if match:
-        snippet = match.group(1)
+    # 2) Extraire le JSON dans un bloc ```json ... ```
+    m = re.search(r'```json\s*([\s\S]*?)```', cleaned)
+    if m:
+        candidate = m.group(1)
     else:
-        match = re.search(r'(\[[\s\S]*\])', cleaned)
-        snippet = match.group(1) if match else cleaned
+        # 3) Supprimer toutes les fences ```...```
+        no_fences = re.sub(r'```[\s\S]*?```', '', cleaned)
+        # 4) Trouver le premier {...}
+        m2 = re.search(r'\{[\s\S]*\}', no_fences)
+        if not m2:
+            logging.warning("No JSON object found in LLM response.")
+            return []
+        candidate = m2.group(0)
 
-    # 3) Quote hyphenated ranges on "line" fields
-    snippet = re.sub(
-        r'("line"\s*:\s*)(\d+\s*-\s*\d+)',
-        lambda m: f'{m.group(1)}"{m.group(2).strip()}"',
-        snippet
+    # **DEBUG**: afficher le JSON candidat
+    logging.debug("Candidate JSON for comments parsing:\n%s", candidate)
+
+    # 5) Quote tous les ranges numériques X-Y → "X-Y"
+    candidate = re.sub(
+        r'(?P<prefix>:\s*)(?P<a>\d+)\s*-\s*(?P<b>\d+)(?P<suffix>\s*[,\}])',
+        lambda m: f'{m.group("prefix")}"{m.group("a")}-{m.group("b")}"{m.group("suffix")}',
+        candidate
     )
 
-    # 4) Remove trailing commas before } or ]
-    snippet = re.sub(r',\s*(\}|])', r'\1', snippet)
+    # 6) Enlever virgules finales avant } ou ]
+    candidate = re.sub(r',\s*(\}|])', r'\1', candidate)
 
-    # 5) Attempt JSON parse
+    # 7) Essayer json.loads
     try:
-        obj = json.loads(snippet)
-        if isinstance(obj, dict):
-            return obj.get("comments", [])
-        if isinstance(obj, list):
-            return obj
+        obj = json.loads(candidate)
     except json.JSONDecodeError as e:
-        logging.warning("Failed to parse JSON snippet: %s", e)
+        logging.warning("Failed json.loads: %s", e)
+        # 8) Fallback ast.literal_eval
+        try:
+            obj = ast.literal_eval(candidate)
+        except Exception as e2:
+            logging.error("Failed ast.literal_eval: %s", e2)
+            return []
 
-    logging.warning("Could not extract comments JSON from LLM response.")
-    return []
+    # 9) Extraire la liste
+    if isinstance(obj, dict) and isinstance(obj.get("comments"), list):
+        comments = obj["comments"]
+    elif isinstance(obj, list):
+        comments = obj
+    else:
+        logging.warning("Parsed object has no 'comments' list.")
+        return []
+
+    # 10) Log du nombre de commentaires extraits
+    logging.info("Extracted %d comment(s) from LLM response.", len(comments))
+
+    return comments
