@@ -42,13 +42,13 @@ runs:
     - name: Run code review
       shell: bash
       env:
-        GITHUB_TOKEN:    ${{ inputs.github-token }}
-        LLM_ENDPOINT:    ${{ inputs.llm-endpoint }}
-        DIFF_CHUNK_SIZE: ${{ inputs.diff-chunk-size }}
-        EXCLUDE_PATTERNS: ${{ inputs.exclude-patterns }}
-        SUMMARY_MODE:    ${{ inputs.summary-mode }}
-        REPOSITORY:      ${{ github.repository }}
-        PR_NUMBER:       ${{ github.event.pull_request.number }}
-        GITHUB_API_URL:  https://api.github.com
+        GITHUB_TOKEN:      ${{ inputs.github-token }}
+        LLM_ENDPOINT:      ${{ inputs.llm-endpoint }}
+        DIFF_CHUNK_SIZE:   ${{ inputs.diff-chunk-size }}
+        EXCLUDE_PATTERNS:  ${{ inputs.exclude-patterns }}
+        SUMMARY_MODE:      ${{ inputs.summary-mode }}
+        REPOSITORY_GITHUB: ${{ github.repository }}
+        PR_NUMBER_GITHUB:  ${{ github.event.pull_request.number }}
+        GITHUB_API_URL:    https://api.github.com
       run: |
         python "${{ github.action_path }}/src/action.py"

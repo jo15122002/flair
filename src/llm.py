@@ -30,10 +30,6 @@ def build_llm_prompt(diff):
     return PROMPT_TEMPLATE.format(diff=diff)
 
 def call_llm(diff_chunk, cfg):
-    """
-    Sends a diff chunk to the LLM endpoint and returns the raw text.
-    Supports DeepCoder-style 'choices' or a simple 'content' key.
-    """
     payload = {"prompt": build_llm_prompt(diff_chunk)}
     try:
         r = requests.post(cfg.LLM_ENDPOINT, json=payload)
@@ -52,7 +48,6 @@ def extract_comments(text: str) -> list[dict]:
       - des ranges numériques non-quotés subsistent (e.g. 1-53),
       - il y a des virgules superflues,
       - ou des fences Markdown entourent le JSON.
-
     Retourne une liste vide en cas d’échec complet.
     """
     # 1) Enlever les balises <think>…</think>
@@ -72,8 +67,8 @@ def extract_comments(text: str) -> list[dict]:
             return []
         candidate = m2.group(0)
 
-    # **DEBUG**: afficher le JSON candidat
-    logging.debug("Candidate JSON for comments parsing:\n%s", candidate)
+    # **AFFICHAGE EN INFO** pour suivi
+    logging.info("Candidate JSON for comments parsing:\n%s", candidate)
 
     # 5) Quote tous les ranges numériques X-Y → "X-Y"
     candidate = re.sub(

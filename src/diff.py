@@ -1,5 +1,6 @@
 import os, logging, requests, re
 
+
 def fetch_pr_diff(repo, pr, token):
     url = f"https://api.github.com/repos/{repo}/pulls/{pr}"
     headers = {
@@ -21,5 +22,36 @@ def filter_diff(diff, patterns):
     return "\n".join(out)
 
 def split_diff(diff, max_chars):
-    if not diff: return []
-    return [diff[i:i+max_chars] for i in range(0, len(diff), max_chars)]
+    """
+    --> On découpe désormais par bloc de fichier (chaque premier 'diff --git').
+    --> On regroupe ces blocs en chunks <= max_chars pour éviter de couper en plein milieu d'un fichier.
+    """
+    if not diff:
+        return []
+
+    # 1) Séparer en blocs par fichier
+    blocks = []
+    current = []
+    for line in diff.splitlines(keepends=True):
+        if line.startswith("diff --git"):
+            if current:
+                blocks.append("".join(current))
+            current = [line]
+        else:
+            current.append(line)
+    if current:
+        blocks.append("".join(current))
+
+    # 2) Regrouper ces blocs en chunks < max_chars
+    chunks = []
+    chunk = ""
+    for blk in blocks:
+        if chunk and len(chunk) + len(blk) > max_chars:
+            chunks.append(chunk)
+            chunk = blk
+        else:
+            chunk += blk
+    if chunk:
+        chunks.append(chunk)
+
+    return chunks
