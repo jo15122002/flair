@@ -21,8 +21,6 @@ class Config:
     
     # Patterns to exclude from diff (converted to a list)
     EXCLUDE_PATTERNS = os.getenv("EXCLUDE_PATTERNS", "test,tests,spec").split(',')
-    # If true, emit a single summary comment instead of one-per-suggestion
-    SUMMARY_MODE = os.getenv("SUMMARY_MODE", "false").lower() in ["true","1","yes"]
 
 def load_config():
     return Config
@@ -37,3 +35,4 @@ if __name__ == "__main__":
     print("GITHUB_API_URL:", config.GITHUB_API_URL)
     print("GITLAB_API_URL:", config.GITLAB_API_URL)
     print("GITLAB_PRIVATE_TOKEN:", config.GITLAB_PRIVATE_TOKEN)
+    print("EXCLUDE_PATTERNS:", config.EXCLUDE_PATTERNS)

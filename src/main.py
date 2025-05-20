@@ -4,6 +4,7 @@ from config import load_config
 from diff_extractor import get_diff_from_pr, filter_diff, preprocess_diff_with_line_numbers, split_diff_intelligent
 from llm_client import query_llm, extract_json_from_text, adjust_line_number_from_diff, build_llm_prompt
 from comment_publisher import post_comments
+import os
 
 def main():
     # Load configuration and initialize logging
@@ -19,6 +20,8 @@ def main():
     if not diff:
         logging.error("No diff retrieved. Check environment variables and permissions.")
         return
+    os.environ["LLM_DIFF_CONTENT"] = diff
+
     
     # Preprocess diff to add line numbers for clarity
     diff_with_line_numbers = preprocess_diff_with_line_numbers(diff)
